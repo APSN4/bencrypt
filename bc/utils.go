@@ -111,12 +111,13 @@ func AesDecrypt(ciphertext, aesKey []byte) ([]byte, error) {
 
 // OpenAndDecrypt returns an in-memory VFS initialized with the contents
 // of the given filename, which will be decrypted with the given AES key,
-//  and which must have one of the following fileTypes:
 //
-//  - .zip
-//  - .tar
-//  - .tar.gz
-//  - .tar.bz2
+//	and which must have one of the following fileTypes:
+//
+//	- .zip
+//	- .tar
+//	- .tar.gz
+//	- .tar.bz2
 func OpenAndDecrypt(filename string, fileType string, aesKey []byte) (vfs.VFS, error) {
 	f, err := os.Open(filename)
 	if err != nil {
@@ -149,10 +150,10 @@ func OpenAndDecrypt(filename string, fileType string, aesKey []byte) (vfs.VFS, e
 // and then encrypts the archive with the given AES key.
 // Supported fileTypes:
 //
-//  - .zip
-//  - .tar
-//  - .tar.gz
-//  TODO: NOT SUPPORTED - .tar.bz2
+//   - .zip
+//   - .tar
+//   - .tar.gz
+//     TODO: NOT SUPPORTED - .tar.bz2
 func SaveAndEncrypt(fs vfs.VFS, outfile string, fileType string, aesKey []byte) error {
 	bb := bytes.NewBuffer(nil)
 	switch fileType {
@@ -193,6 +194,27 @@ func EncryptFile(clearfile string, outfile string, aesKey []byte) error {
 		return err
 	}
 	cipher, err := AesEncrypt(clear, aesKey)
+	if err != nil {
+		return err
+	}
+	if err := ioutil.WriteFile(outfile, cipher, 0600); err != nil {
+		return err
+	}
+	return nil
+}
+
+// DecryptFile will decrypt file with aesKey
+func DecryptFile(file string, outfile string, aesKey []byte) error {
+	f, err := os.Open(file)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	encrypt, err := ioutil.ReadAll(f)
+	if err != nil {
+		return err
+	}
+	cipher, err := AesDecrypt(encrypt, aesKey)
 	if err != nil {
 		return err
 	}
